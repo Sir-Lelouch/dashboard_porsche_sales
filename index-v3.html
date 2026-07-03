@@ -1,0 +1,468 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Porsche - Inteligência Comercial V3</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI,sans-serif;
+}
+
+body{
+background:#050505;
+color:white;
+}
+
+.hero{
+height:70vh;
+background:
+linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.8)),
+url("porsche-hero.jpg");
+background-size:cover;
+background-position:center;
+display:flex;
+align-items:center;
+}
+
+.hero-content{
+padding:60px;
+max-width:900px;
+}
+
+.hero h1{
+font-size:72px;
+line-height:75px;
+}
+
+.hero p{
+margin-top:25px;
+font-size:22px;
+color:#ddd;
+}
+
+.filters{
+padding:20px 40px;
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:15px;
+}
+
+select{
+height:55px;
+background:#111;
+color:white;
+border:none;
+border-radius:12px;
+padding:10px;
+}
+
+.kpis{
+padding:0 40px;
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:20px;
+}
+
+.card{
+background:#111;
+padding:25px;
+border-radius:18px;
+}
+
+.card-title{
+color:#aaa;
+margin-bottom:10px;
+}
+
+.card-value{
+font-size:36px;
+font-weight:bold;
+color:#d5001c;
+}
+
+.grid{
+padding:30px 40px;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+}
+
+.panel{
+background:#111;
+padding:25px;
+border-radius:18px;
+}
+
+.panel h3{
+margin-bottom:20px;
+}
+
+.insight{
+background:#1a1a1a;
+padding:12px;
+margin-bottom:12px;
+border-left:4px solid #d5001c;
+}
+
+.footer{
+text-align:center;
+padding:40px;
+color:#777;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<section class="hero">
+
+<div class="hero-content">
+
+<div style="letter-spacing:4px;margin-bottom:20px;">
+PORSCHE SALES INTELLIGENCE
+</div>
+
+<h1>
+Performance comercial com precisão esportiva.
+</h1>
+
+<p>
+Descubra quais modelos lideram o mercado e quais oportunidades apresentam maior potencial.
+</p>
+
+</div>
+
+</section>
+
+<section class="filters">
+
+<select id="filtroModelo">
+<option value="">Todos os Modelos</option>
+</select>
+
+<select id="filtroAno">
+<option value="">Todos os Anos</option>
+</select>
+
+<select id="filtroEstado">
+<option value="">Todos os Estados</option>
+</select>
+
+<select id="filtroPagamento">
+<option value="">Todos os Pagamentos</option>
+</select>
+
+</section>
+
+<section class="kpis">
+
+<div class="card">
+<div class="card-title">Receita Total</div>
+<div id="receitaTotal" class="card-value">-</div>
+</div>
+
+<div class="card">
+<div class="card-title">Modelo Líder</div>
+<div id="modeloLider" class="card-value">-</div>
+</div>
+
+<div class="card">
+<div class="card-title">Ticket Médio</div>
+<div id="ticketMedio" class="card-value">-</div>
+</div>
+
+<div class="card">
+<div class="card-title">Ano Líder</div>
+<div id="anoLider" class="card-value">-</div>
+</div>
+
+</section>
+
+<section class="grid">
+
+<div class="panel">
+
+<h3>Resumo dos Dados</h3>
+
+<div id="insights"></div>
+
+</div>
+
+<div class="panel">
+
+<h3>Dados Carregados</h3>
+
+<div id="totalRegistros"></div>
+
+</div>
+
+</section>
+
+<div class="footer">
+Porsche Dashboard Premium V3
+</div>
+
+<script>
+
+let dadosOriginais=[];
+
+async function carregarDados(){
+
+const response=
+await fetch("porsche-data.json");
+
+dadosOriginais=
+await response.json();
+
+popularFiltros();
+
+atualizarDashboard(dadosOriginais);
+
+}
+
+function popularFiltros(){
+
+preencher(
+"filtroModelo",
+[...new Set(dadosOriginais.map(x=>x.modelo))]
+);
+
+preencher(
+"filtroAno",
+[...new Set(dadosOriginais.map(x=>x.ano))]
+);
+
+preencher(
+"filtroEstado",
+[...new Set(dadosOriginais.map(x=>x.estado))]
+);
+
+preencher(
+"filtroPagamento",
+[...new Set(dadosOriginais.map(x=>x.pagamento))]
+);
+
+}
+
+function preencher(id,valores){
+
+const select=
+document.getElementById(id);
+
+valores.sort().forEach(v=>{
+
+const op=
+document.createElement("option");
+
+op.value=v;
+op.textContent=v;
+
+select.appendChild(op);
+
+});
+
+}
+
+function atualizarDashboard(dados){
+
+const receita=
+dados.reduce((s,x)=>s+x.valor,0);
+
+const ticket=
+receita/dados.length;
+
+const modelos={};
+
+dados.forEach(x=>{
+
+modelos[x.modelo]=
+(modelos[x.modelo]||0)+1;
+
+});
+
+const lider=
+Object.keys(modelos)
+.sort((a,b)=>modelos[b]-modelos[a])[0];
+
+const anos={};
+
+dados.forEach(x=>{
+
+anos[x.ano]=
+(anos[x.ano]||0)+1;
+
+});
+
+const anoLider=
+Object.keys(anos)
+.sort((a,b)=>anos[b]-anos[a])[0];
+
+document.getElementById(
+"receitaTotal"
+).innerText=
+receita.toLocaleString(
+"pt-BR",
+{
+style:"currency",
+currency:"USD"
+}
+);
+
+document.getElementById(
+"ticketMedio"
+).innerText=
+ticket.toLocaleString(
+"pt-BR",
+{
+style:"currency",
+currency:"USD"
+}
+);
+
+document.getElementById(
+"modeloLider"
+).innerText=
+lider;
+
+document.getElementById(
+"anoLider"
+).innerText=
+anoLider;
+
+document.getElementById(
+"totalRegistros"
+).innerHTML=
+`<h1>${dados.length}</h1> registros`;
+
+document.getElementById(
+"insights"
+).innerHTML=
+
+`
+<div class="insight">
+🚘 Modelo líder: ${lider}
+</div>
+
+<div class="insight">
+📅 Ano líder: ${anoLider}
+</div>
+
+<div class="insight">
+💰 Receita total: ${receita.toLocaleString("pt-BR")}
+</div>
+
+<div class="insight">
+📊 Registros analisados: ${dados.length}
+</div>
+`;
+
+}
+
+function filtrar(){
+
+const modelo =
+document.getElementById(
+"filtroModelo"
+).value;
+
+const ano =
+document.getElementById(
+"filtroAno"
+).value;
+
+const estado =
+document.getElementById(
+"filtroEstado"
+).value;
+
+const pagamento =
+document.getElementById(
+"filtroPagamento"
+).value;
+
+const filtrados =
+dadosOriginais.filter(item => {
+
+return (
+(!modelo || item.modelo===modelo)
+&&
+(!ano || item.ano==ano)
+&&
+(!estado || item.estado===estado)
+&&
+(!pagamento || item.pagamento===pagamento)
+);
+
+});
+
+
+
+if(filtrados.length===0){
+
+document.getElementById("receitaTotal").innerText = "R$ 0";
+
+document.getElementById("ticketMedio").innerText = "R$ 0";
+
+document.getElementById("modeloLider").innerText = "-";
+
+document.getElementById("anoLider").innerText = "-";
+
+document.getElementById("totalRegistros").innerHTML =
+"<h1>0</h1> registros";
+
+document.getElementById("insights").innerHTML =
+'<div class="insight">Nenhum registro encontrado.</div>';
+
+return;
+
+}
+
+atualizarDashboard(filtrados);
+
+}
+
+carregarDados();
+
+
+document
+.getElementById("filtroModelo")
+.addEventListener(
+"change",
+filtrar
+);
+
+document
+.getElementById("filtroAno")
+.addEventListener(
+"change",
+filtrar
+);
+
+document
+.getElementById("filtroEstado")
+.addEventListener(
+"change",
+filtrar
+);
+
+document
+.getElementById("filtroPagamento")
+.addEventListener(
+"change",
+filtrar
+);
+
+</script>
+
+</body>
+</html>
